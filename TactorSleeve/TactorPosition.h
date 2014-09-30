@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <tchar.h>
 #include <strsafe.h>
+#include <math.h>
 
 void HandActions(float, float, float, float);
 void RectanglePos(float, float, float);
@@ -113,6 +114,8 @@ unsigned long counter = 0;
 
 
 
+
+
 	HANDLE hComm;
 
 void MotorControllerInit(void){
@@ -128,20 +131,20 @@ void MotorControllerInit(void){
 
 void HandActions(float x, float y, float z, float grip){
 	
-	int v = rand() % 3 + 1;
-	
-	switch (v){
-	case 1:
-		RectanglePos(x, y, z);
-		break;
-	case 2:
-		TrianglePos(x, y, z);
-		break;
-	case 3:
-		CirclePos(x, y, z);
-		break;
-	}
-
+	//int v = rand() % 3 + 1;
+	//
+	//switch (v){
+	//case 1:
+	//	RectanglePos(x, y, z);
+	//	break;
+	//case 2:
+	//	TrianglePos(x, y, z);
+	//	break;
+	//case 3:
+	//	CirclePos(x, y, z);
+	//	break;
+	//}
+	RectanglePos(x, y, z);
 	GripFlag(grip);
 	FlagActions();
 
@@ -172,26 +175,45 @@ void RectanglePos(float x, float y, float z){
 		y > rangeBottom + rangeAlert) { flag = IN_FIELD; }
 }
 
-void TrianglePos(float x, float y, float z){
-
-
-
-}
-
-void CirclePos( float x,  float y,  float z){
-	float xr = x;
-	int r;
-	r = ((xr) ^ 2 + (y - 300) ^ 2);
-
-	if (r > rangeRadial){ flag = BOUNDARY; }
-	else if (r > rangeRadial - rangeWarning){ flag = WARNING; }
-	else if (r > rangeRadial - rangeAlert){ flag = ALERT; }
-
-
-
-
-}
-
+//void TrianglePos(float x, float y, float z){
+//
+//
+//
+//}
+//
+//void CirclePos( float x,  float y,  float z){
+//	double pi = 3.1415926535897;
+//	float angle;
+//	float r;
+//		
+//	r = ((x) ^ 2 + (y - 300) ^ 2);
+//	angle = atan(y - 300 / x);
+//
+//	
+//	
+//	
+//	if (r > rangeRadial){ 
+//		
+//	
+//	
+//	}
+//	else if (r > rangeRadial - rangeWarning){ 
+//		flag = WARNING; 
+//	
+//	
+//	}
+//	else if (r > rangeRadial - rangeAlert){ 
+//		flag = ALERT; 
+//	
+//	
+//	}
+//
+//
+//		
+//
+//
+//}
+//
 
 
 
