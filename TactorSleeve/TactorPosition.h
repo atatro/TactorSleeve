@@ -19,6 +19,8 @@
 #include <tchar.h>
 #include <strsafe.h>
 #include <math.h>
+#include <cstdlib> 
+#include <ctime>
 
 void HandActions(float, float, float, float);
 void RectanglePos(float, float, float);
@@ -31,6 +33,7 @@ void WarningMotorSignal(int);
 void BoundaryMotorSignal(int);
 void Display(float, float, float, float);
 void InFieldMotorSignal();
+void exit();
 
 //Flags
 #define NO_ACTION				1
@@ -71,10 +74,6 @@ void InFieldMotorSignal();
 #define RIGHT					32
 #define BOTTOM					33
 
-#define ALERT					34
-#define WARNING					35
-#define BOUNDARY				36
-
 #define portName	"\\\\.\\COM5"
 
 //Motor Amplitues & Frequencies
@@ -92,9 +91,13 @@ const int rangeRight = 200;
 const int rangeBottom = 200;
 
 //Circular Ranges
-const int rangeRadial = 100;
+const int rangeRadial = 200;
+const int ycenter = 300;
+const double trans1 = 0.57735; //slope of transition points (30deg, 60deg, etc)
+const double trans2 = 1.73205;
 
 //Triangular Ranges
+const int yintercept = 100;
 
 
 
@@ -103,17 +106,15 @@ const int rangeWarning = 50;
 const int rangeAlert = 75;
 
 // Status Flags
+int shape = 0;
 int status = 0;
 int gripflag = HAND_FIST;
 int flag = 1;
 
 // Counters implemented to slow signal transmission to protect arduino buffer
 unsigned long counter = 0;
-#define maxCount	10
-#define maxCount2	100
-
-
-
+#define maxCount	0
+#define maxCount2	0
 
 
 	HANDLE hComm;
@@ -130,25 +131,37 @@ void MotorControllerInit(void){
 }
 
 void HandActions(float x, float y, float z, float grip){
+	srand(time(0));
+	if (shape == 0){
+		shape = rand() % 3 + 1;
+		//std::cout << "Boundary Shape: " << shape << "\n";
 	
-	//int v = rand() % 3 + 1;
-	//
-	//switch (v){
-	//case 1:
-	//	RectanglePos(x, y, z);
-	//	break;
-	//case 2:
-	//	TrianglePos(x, y, z);
-	//	break;
-	//case 3:
-	//	CirclePos(x, y, z);
-	//	break;
-	//}
-	RectanglePos(x, y, z);
+		switch (shape){
+		case 1:
+			std::cout << "Boundary Shape: RECTANGLE\n";
+			break;
+		case 2:
+			std::cout << "Boundary Shape: TRIANGLE\n";
+			break;
+		case 3:
+			std::cout << "Boundary Shape: CIRCLE\n";
+			break;
+		}
+	}
+
+		switch (shape){
+		case 1:
+			RectanglePos(x, y, z);
+			break;
+		case 2:
+			TrianglePos(x, y, z);
+			break;
+		case 3:
+			CirclePos(x, y, z);
+			break;
+		}
 	GripFlag(grip);
 	FlagActions();
-
-
 }
 
 void RectanglePos(float x, float y, float z){
@@ -175,49 +188,111 @@ void RectanglePos(float x, float y, float z){
 		y > rangeBottom + rangeAlert) { flag = IN_FIELD; }
 }
 
-//void TrianglePos(float x, float y, float z){
-//
-//
-//
-//}
-//
-//void CirclePos( float x,  float y,  float z){
-//	double pi = 3.1415926535897;
-//	float angle;
-//	float r;
-//		
-//	r = ((x) ^ 2 + (y - 300) ^ 2);
-//	angle = atan(y - 300 / x);
-//
-//	
-//	
-//	
-//	if (r > rangeRadial){ 
-//		
-//	
-//	
-//	}
-//	else if (r > rangeRadial - rangeWarning){ 
-//		flag = WARNING; 
-//	
-//	
-//	}
-//	else if (r > rangeRadial - rangeAlert){ 
-//		flag = ALERT; 
-//	
-//	
-//	}
-//
-//
-//		
-//
-//
-//}
-//
+void TrianglePos(float x, float y, float z){
+	float d1, d2;
 
+	d1 = y - 2 * x;
+	d2 = y + 2 * x;
 
+	if (x >= 0){
+		if (y > rangeTop) { flag = BOUNDARY_TOP; }
+		else if (y > rangeTop - rangeWarning) { flag = WARNING_TOP; }
+		else if (y > rangeTop - rangeAlert) { flag = ALERT_TOP; }
+		else
+			if (d1 < yintercept) { flag = BOUNDARY_RIGHT_BOTTOM; }
+			else if (d1 < yintercept + rangeWarning) { flag = WARNING_RIGHT_BOTTOM; }
+			else if (d1 < yintercept + rangeAlert) { flag = ALERT_RIGHT_BOTTOM; }
+			else { flag = IN_FIELD; }
+	}
+	else if (x < 0){
+		if (y > rangeTop) { flag = BOUNDARY_TOP; }
+		else if (y > rangeTop - rangeWarning) { flag = WARNING_TOP; }
+		else if (y > rangeTop - rangeAlert) { flag = ALERT_TOP; }
+		else
+			if (d2 < yintercept) { flag = BOUNDARY_BOTTOM_LEFT; }
+			else if (d2 < yintercept + rangeWarning) { flag = WARNING_BOTTOM_LEFT; }
+			else if (d2 < yintercept + rangeAlert) { flag = ALERT_BOTTOM_LEFT; }
+			else { flag = IN_FIELD; }
+	}
+	else { std::cout << "Positioning Error\n"; }
+}
 
+void CirclePos( float x,  float y,  float z){
+	float r, slope;
 
+	slope = (y-ycenter) / (x-0);
+	r = sqrt((x)*(x)+(y-ycenter)*(y-ycenter));
+	
+	if (r > rangeRadial){ 
+		if (x > 0){
+			if (slope >= trans2){ flag = BOUNDARY_TOP; }
+			else if (slope < trans2 && slope >= trans1){ flag = BOUNDARY_TOP_RIGHT; }
+			else if (slope < trans1 && slope >= (-1)*trans1){ flag = BOUNDARY_RIGHT; }
+			else if (slope < (-1)*trans1 && slope >= (-1)*trans2){ flag = BOUNDARY_RIGHT_BOTTOM; }
+			else if (slope < (-1)*trans2){ flag = BOUNDARY_BOTTOM; }
+		}
+		else if (x < 0){
+			if (slope >= trans2){ flag = BOUNDARY_BOTTOM; }
+			else if (slope < trans2 && slope >= trans1){ flag = BOUNDARY_BOTTOM_LEFT; }
+			else if (slope < trans1 && slope >= (-1)*trans1){ flag = BOUNDARY_LEFT; }
+			else if (slope < (-1)*trans1 && slope >= (-1)*trans2){ flag = BOUNDARY_LEFT_TOP; }
+			else if (slope < (-1)*trans2){ flag = BOUNDARY_TOP; }
+		}
+		else if (x == 0){
+			if (y > ycenter){ flag = BOUNDARY_TOP; }
+			else if (y < ycenter) { flag = BOUNDARY_BOTTOM; }
+		}
+		else 
+			std::cout << "Radial Range Error\n";
+		
+	}
+	else if (r > rangeRadial - rangeWarning){ 
+		if (x > 0){
+			if (slope >= trans2){ flag = WARNING_TOP; }
+			else if (slope < trans2 && slope >= trans1){ flag = WARNING_TOP_RIGHT; }
+			else if (slope < trans1 && slope >= (-1)*trans1){ flag = WARNING_RIGHT; }
+			else if (slope < (-1)*trans1 && slope >= (-1)*trans2){ flag = WARNING_RIGHT_BOTTOM; }
+			else if (slope < (-1)*trans2){ flag = WARNING_BOTTOM; }
+		}
+		else if (x < 0){
+			if (slope >= trans2){ flag = WARNING_BOTTOM; }
+			else if (slope < trans2 && slope >= trans1){ flag = WARNING_BOTTOM_LEFT; }
+			else if (slope < trans1 && slope >= (-1)*trans1){ flag = WARNING_LEFT; }
+			else if (slope < (-1)*trans1 && slope >= (-1)*trans2){ flag = WARNING_LEFT_TOP; }
+			else if (slope < (-1)*trans2){ flag = WARNING_TOP; }
+		}
+		else if (x == 0){
+			if (y > ycenter){ flag = WARNING_TOP; }
+			else if (y < ycenter) { flag = WARNING_BOTTOM; }
+		}
+		else
+			std::cout << "Radial Range Error\n";
+	
+	}
+	else if (r > rangeRadial - rangeAlert){ 
+		if (x > 0){
+			if (slope >= trans2){ flag = ALERT_TOP; }
+			else if (slope < trans2 && slope >= trans1){ flag = ALERT_TOP_RIGHT; }
+			else if (slope < trans1 && slope >= (-1)*trans1){ flag = ALERT_RIGHT; }
+			else if (slope < (-1)*trans1 && slope >= (-1)*trans2){ flag = ALERT_RIGHT_BOTTOM; }
+			else if (slope < (-1)*trans2){ flag = ALERT_BOTTOM; }
+		}
+		else if (x < 0){
+			if (slope >= trans2){ flag = ALERT_BOTTOM; }
+			else if (slope < trans2 && slope >= trans1){ flag = ALERT_BOTTOM_LEFT; }
+			else if (slope < trans1 && slope >= (-1)*trans1){ flag = ALERT_LEFT; }
+			else if (slope < (-1)*trans1 && slope >= (-1)*trans2){ flag = ALERT_LEFT_TOP; }
+			else if (slope < (-1)*trans2){ flag = ALERT_TOP; }
+		}
+		else if (x == 0){
+			if (y > ycenter){ flag = ALERT_TOP; }
+			else if (y < ycenter) { flag = ALERT_BOTTOM; }
+		}
+		else
+			std::cout << "Radial Range Error\n";
+	}
+	else { flag = IN_FIELD; }
+}
 
 void GripFlag(float grip){
 	if (grip == 1)
@@ -551,4 +626,7 @@ void Display(float x, float y, float z, float grip) {
 		<< std::setw(6) << "   Grip: " << grip;
 }
 
-
+void exit(){
+	DWORD bytesSend;
+	WriteFile(hComm, "A()", 3, &bytesSend, 0);
+	}

@@ -16,6 +16,7 @@
 #include "Leap.h"
 #include "TactorPosition.h"
 
+
 using namespace Leap;
 
 
@@ -59,7 +60,9 @@ void SampleListener::onDisconnect(const Controller& controller) {
 }
 
 void SampleListener::onExit(const Controller& controller) {
-	std::cout << "Exited" << std::endl;
+		exit();
+		std::cout << "Exited" << std::endl;
+
 }
 
 void SampleListener::onFrame(const Controller& controller) {
@@ -131,3 +134,4 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
+
