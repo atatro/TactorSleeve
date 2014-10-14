@@ -88,7 +88,7 @@ void exit();
 const int rangeLeft = -200;
 const int rangeTop = 400;
 const int rangeRight = 200;
-const int rangeBottom = 200;
+const int rangeBottom = 100;
 
 //Circular Ranges
 const int rangeRadial = 200;
