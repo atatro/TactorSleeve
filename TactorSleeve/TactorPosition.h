@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <iomanip> 
-#include <string.h>
+#include <string> 
 #include "Leap.h"
 #include <windows.h>
 #include <stdio.h>
@@ -98,10 +98,6 @@ const double trans2 = 1.73205;
 
 //Triangular Ranges
 const int yintercept = 100;
-
-
-
-
 const int rangeWarning = 50;
 const int rangeAlert = 75;
 
@@ -115,6 +111,12 @@ int flag = 1;
 unsigned long counter = 0;
 #define maxCount	0
 #define maxCount2	0
+
+// Strings to define motor controls
+const std::string Alert = ",0,1500,150)";
+const std::string Warning = ",1,4095,100)";
+const std::string Boundary = ",2,4095,20)";
+
 
 
 	HANDLE hComm;
@@ -551,19 +553,19 @@ void AlertMotorSignal(int direction){
 	{
 	case LEFT:
 		std::cout << "Activate LEFT motor ALERT signal.\n";
-		WriteFile(hComm, "R(0,1,1500,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(0,0,1500,150)", 15, &bytesSend, 0);
 		break;
 	case TOP:
 		std::cout << "Activate TOP motor ALERT signal.\n";
-		WriteFile(hComm, "R(1,1,1500,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(1,0,1500,150)", 15, &bytesSend, 0);
 		break;
 	case RIGHT:
 		std::cout << "Activate RIGHT motor ALERT signal.\n";
-		WriteFile(hComm, "R(2,1,1500,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(2,0,1500,150)", 15, &bytesSend, 0);
 		break;
 	case BOTTOM:
 		std::cout << "Activate BOTTOM motor ALERT signal.\n";
-		WriteFile(hComm, "R(3,1,1500,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(3,0,1500,150)", 15, &bytesSend, 0);
 		break;
 	default:
 		break;
@@ -576,19 +578,19 @@ void WarningMotorSignal(int direction){
 	{
 	case LEFT:
 		std::cout << "Activate LEFT motor WARNING signal.\n";
-		WriteFile(hComm, "R(0,1,2000,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(0,1,4095,100)", 15, &bytesSend, 0);
 			break;
 	case TOP:
 		std::cout << "Activate TOP motor WARNING signal.\n";
-		WriteFile(hComm, "R(1,1,2000,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(1,1,4095,100)", 15, &bytesSend, 0);
 			break;
 	case RIGHT:
 		std::cout << "Activate RIGHT motor WARNING signal.\n";
-		WriteFile(hComm, "R(2,1,2000,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(2,1,4095,100)", 15, &bytesSend, 0);
 			break;
 	case BOTTOM:
 		std::cout << "Activate BOTTOM motor WARNING signal.\n";
-		WriteFile(hComm, "R(3,1,2000,10)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(3,1,4095,100)", 15, &bytesSend, 0);
 			break;
 	default:
 		break;
@@ -601,19 +603,19 @@ void BoundaryMotorSignal(int direction){
 	{
 	case LEFT:
 		std::cout << "Activate LEFT motor BOUNDARY signal.\n";
-		WriteFile(hComm, "R(0,2,4000,20)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(0,2,4095,20)", 14, &bytesSend, 0);
 			break;
 	case TOP:
 		std::cout << "Activate TOP motor BOUNDARY signal.\n";
-		WriteFile(hComm, "R(1,2,4000,20)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(1,2,4095,20)", 14, &bytesSend, 0);
 			break;
 	case RIGHT:
 		std::cout << "Activate RIGHT motor BOUNDARY signal.\n";
-		WriteFile(hComm, "R(2,2,4000,20)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(2,2,4095,20)", 14, &bytesSend, 0);
 			break;
 	case BOTTOM:
 		std::cout << "Activate BOTTOM motor BOUNDARY signal.\n";
-		WriteFile(hComm, "R(3,2,4000,20)", 14, &bytesSend, 0);
+		WriteFile(hComm, "R(3,2,4095,20)", 14, &bytesSend, 0);
 			break;
 	default:
 		break;
